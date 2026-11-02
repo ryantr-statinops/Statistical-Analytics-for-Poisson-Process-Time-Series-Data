@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
-import datetime as datatime
+import datetime as dt
 
 
 def setup_folders():
@@ -13,7 +13,7 @@ def setup_folders():
             os.makedirs(folder)
             print(f"--- Đã tạo thư mục: {folder} ---")
 
-def generate_factory_data(factory_name, lam, start_year = 2016, end_year = 2018,):
+def generate_factory_data(factory_name, lam, start_year=2016, end_year=2018):
     date_range = pd.date_range(start =f'{start_year}-01-01', end = f'{end_year}-12-31 23:00:00', freq = 'h')
 
     orders_count = np.random.poisson(lam, len(date_range))
@@ -39,12 +39,13 @@ def generate_factory_data(factory_name, lam, start_year = 2016, end_year = 2018,
     print(f"--- Đã tạo xong dữ liệu cho {factory_name} tại {file_path} ---")
 
 # THỰC THI: Tạo 3 nhà máy với đặc tính thống kê khác nhau
-setup_folders()
-# Factory A: Ổn định (5 đơn/giờ)
-generate_factory_data("Factory_A", lam=5)
+if __name__ == "__main__":
+    setup_folders()
+    # Factory A: Ổn định (5 đơn/giờ)
+    generate_factory_data("Factory_A", lam=5)
 
-# Factory B: Bận rộn hơn (12 đơn/giờ)
-generate_factory_data("Factory_B", lam=12)
+    # Factory B: Bận rộn hơn (12 đơn/giờ)
+    generate_factory_data("Factory_B", lam=12)
 
-# Factory C: Có sự biến động (Non-stationary - giả lập bằng cách tăng lambda lên)
-generate_factory_data("Factory_C", lam=30)
+    # Factory C: Có sự biến động (Non-stationary - giả lập bằng cách tăng lambda lên)
+    generate_factory_data("Factory_C", lam=30)
