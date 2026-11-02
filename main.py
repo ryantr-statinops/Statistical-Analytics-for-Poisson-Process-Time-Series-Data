@@ -25,11 +25,10 @@ if __name__ == "__main__":
         print(summary_stats.to_string(index=False))
         
         # BƯỚC 4: Xuất báo cáo và Trực quan hóa
-        os.makedirs('data/processed', exist_ok=True)
-        
+        os.makedirs('result', exist_ok=True)
+
         # Xuất file báo cáo Markdown
-        export_report(summary_stats)
-        
+        export_report(summary_stats, file_name='result/final_report.md')
         # Vẽ biểu đồ xu hướng
         print("\n--- Đang vẽ biểu đồ xu hướng... ---")
         plot_order_trends(hourly_data)

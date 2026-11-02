@@ -81,8 +81,11 @@ project_stochastic/
 |
 ├── data/              # Chứa dữ liệu thô và dữ liệu sau tính toán
 |   ├── raw/           # Chứa 3 file CSV dữ liệu gốc của các nhà máy
-|   └── processed/     # Chứa file báo cáo sau tính toán và tổng hợp (final_report.md)
+|   └── processed/     # Dữ liệu trung gian sau tiền xử lý
 |   
+├── result/            # Chứa các báo cáo kết quả đầu ra
+|   └── final_report.md# Báo cáo tổng hợp thống kê & kiểm định Poisson
+|
 ├── src/               # Chứa các Module tính toán chuyên biệt
 |   ├── data_loader.py # Module đọc file và zero-fill chuỗi thời gian theo giờ
 |   ├── stats_engine.py# Module tính chỉ số thống kê & kiểm định Chi-square Poisson
@@ -95,7 +98,6 @@ project_stochastic/
 ├── data_gen.py        # Script khởi tạo dữ liệu giả lập Poisson ban đầu
 └── requirements.txt   # Danh sách thư viện phụ thuộc
 ```
-
 ---
 
 ## 4. Hướng dẫn triển khai (Step-by-Step)
@@ -116,6 +118,6 @@ project_stochastic/
    ```bash
    python main.py
    ```
-5. **Bước 5:** Xem kết quả phân tích thống kê và kiểm định Poisson chi tiết tại `data/processed/final_report.md`.
+5. **Bước 5:** Xem kết quả phân tích thống kê và kiểm định Poisson chi tiết tại `result/final_report.md`.
 
 ---

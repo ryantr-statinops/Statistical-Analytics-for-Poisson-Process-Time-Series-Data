@@ -1,8 +1,8 @@
+import os
 import pandas as pd
 import numpy as np
 from scipy import stats
 from datetime import datetime
-
 def calculate_basic_stats(hourly_df):
     """
     Tính toán các chỉ số thống kê đặc trưng cho từng nhà máy.
@@ -105,8 +105,9 @@ def _format_markdown_table(df):
         ]
         return "\n".join([header_row, sep_row] + data_rows)
 
-def export_report(summary_df, file_name='data/processed/final_report.md'):
+def export_report(summary_df, file_name='result/final_report.md'):
     """Tạo báo cáo dưới dạng file Markdown để lưu trữ"""
+    os.makedirs(os.path.dirname(file_name), exist_ok=True)
     with open(file_name, 'w', encoding='utf-8') as f:
         f.write("# BÁO CÁO PHÂN TÍCH QUÁ TRÌNH NGẪU NHIÊN (SOFA)\n\n")
         f.write(f"Ngày ghi nhận dữ liệu: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
