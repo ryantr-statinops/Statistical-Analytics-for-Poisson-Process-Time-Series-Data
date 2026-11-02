@@ -92,20 +92,45 @@ def poisson_goodness_of_fit(group_data, min_expected=5):
     chi2, p_val = stats.chisquare(f_obs=f_obs, f_exp=f_exp, ddof=ddof)
     return float(p_val)
 
+def _format_markdown_table(df):
+    try:
+        return df.to_markdown(index=False)
+    except (ImportError, ModuleNotFoundError):
+        headers = [str(c) for c in df.columns]
+        header_row = "| " + " | ".join(headers) + " |"
+        sep_row = "| " + " | ".join(["---"] * len(headers)) + " |"
+        data_rows = [
+            "| " + " | ".join(str(val) for val in row) + " |"
+            for row in df.values
+        ]
+        return "\n".join([header_row, sep_row] + data_rows)
+
 def export_report(summary_df, file_name='data/processed/final_report.md'):
     """Tạo báo cáo dưới dạng file Markdown để lưu trữ"""
     with open(file_name, 'w', encoding='utf-8') as f:
         f.write("# BÁO CÁO PHÂN TÍCH QUÁ TRÌNH NGẪU NHIÊN (SOFA)\n\n")
         f.write(f"Ngày ghi nhận dữ liệu: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
-        f.write("## 1. Bảng tóm tắt chỉ số các nhà máy\n")
-        f.write(summary_df.to_markdown(index=False))
-        f.write("\n\n## 2. Nhận xét thống kê\n")
-        
+        f.write("## 1. Bảng tóm tắt chỉ số các nhà máy\n\n")
+        f.write(_format_markdown_table(summary_df))
+        f.write("\n\n## 2. Nhận xét thống kê\n\n")
+
         for _, row in summary_df.iterrows():
             f.write(f"### Nhà máy: {row['factory_id']}\n")
             f.write(f"- Tốc độ đơn hàng trung bình (lambda): {row['lambda_est']} đơn/giờ.\n")
+            f.write(f"- Phương sai: {row['variance']} | Chỉ số phân tán (Dispersion Index): {row['dispersion_index']}.\n")
+
+            p_val = row.get('p_value_chi2')
+            if p_val is not None and pd.notna(p_val):
+                f.write(f"- Kiểm định Chi-square Poisson (p-value): {p_val}\n")
+                if p_val > 0.05:
+                    f.write("  - Đánh giá kiểm định: Không bác bỏ giả định Poisson (dữ liệu phù hợp với phân phối Poisson ở mức ý nghĩa 5%).\n")
+                else:
+                    f.write("  - Đánh giá kiểm định: Bác bỏ giả định Poisson (dữ liệu có sự sai lệch đáng kể so với phân phối Poisson).\n")
+
             if 0.9 <= row['dispersion_index'] <= 1.1:
-                f.write("- Đánh giá: Hoạt động chuẩn theo phân phối Poisson.\n")
+                f.write("- Đánh giá phân tán: Hoạt động chuẩn theo phân phối Poisson (Equidispersion).\n\n")
+            elif row['dispersion_index'] > 1.1:
+                f.write("- Đánh giá phân tán: Có dấu hiệu biến động bất thường cao hơn kỳ vọng (Overdispersion).\n\n")
             else:
-                f.write("- Đánh giá: Có dấu hiệu biến động bất thường (Overdispersion).\n")
+                f.write("- Đánh giá phân tán: Biến động thấp hơn kỳ vọng (Underdispersion).\n\n")
     print(f"--- Đã xuất báo cáo chuyên sâu tại {file_name} ---")
