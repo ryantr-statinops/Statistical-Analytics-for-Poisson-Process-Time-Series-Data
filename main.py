@@ -1,12 +1,10 @@
 import os
-from datetime import datetime
+import matplotlib.pyplot as plt
 
-from matplotlib.pyplot import axes
 # Import các module từ thư mục src
 from src.data_loader import factory_data_loader, get_hourly_counts
 from src.stats_engine import calculate_basic_stats, export_report
 from src.visualizer import plot_order_trends, plot_distribution_comparison
-
 if __name__ == "__main__":
     # BƯỚC 1: Tải dữ liệu từ data/raw/
     # Chúng ta lọc từ năm 2016 đến 2018 như mục tiêu dự án
@@ -34,25 +32,22 @@ if __name__ == "__main__":
         
         # Vẽ biểu đồ xu hướng
         print("\n--- Đang vẽ biểu đồ xu hướng... ---")
-        plot_order_trends(hourly_data, "Factory_A")
-        plot_order_trends(hourly_data, "Factory_B")
-        plot_order_trends(hourly_data, "Factory_C")
+        plot_order_trends(hourly_data)
+
         
         # Vẽ biểu đồ so sánh phân phối cho các Factory (để kiểm chứng Poisson)
-        import matplotlib.pyplot as plt
-        fig, axs = plt.subplots(1, 3, figsize = (18, 6), sharey = True)
-        plot_distribution_comparison(hourly_data, "Factory_A", ax = axs[0])
-        plot_distribution_comparison(hourly_data, "Factory_B", ax = axs[1])
-        plot_distribution_comparison(hourly_data, "Factory_C", ax = axs[2])
+        fig, axs = plt.subplots(1, 3, figsize=(18, 6), sharey=True)
+        plot_distribution_comparison(hourly_data, "Factory_A", ax=axs[0])
+        plot_distribution_comparison(hourly_data, "Factory_B", ax=axs[1])
+        plot_distribution_comparison(hourly_data, "Factory_C", ax=axs[2])
 
         axs[0].set_ylabel('Mật độ (Density)')
         axs[1].set_ylabel('')
-        axs[2].set_ylabel('')         
+        axs[2].set_ylabel('')
 
         axs[0].set_xlabel('Số đơn hàng / Giờ')
-        axs[1].set_xlabel('')
-        axs[2].set_xlabel('')
-
+        axs[1].set_xlabel('Số đơn hàng / Giờ')
+        axs[2].set_xlabel('Số đơn hàng / Giờ')
 
         plt.tight_layout()
         plt.show()
