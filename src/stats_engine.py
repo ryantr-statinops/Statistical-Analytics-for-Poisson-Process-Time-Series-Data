@@ -19,12 +19,16 @@ def calculate_basic_stats(hourly_df):
         
         # Chỉ số phân tán (Index of Dispersion) - Nếu ~ 1 thì là Poisson chuẩn
         iod = var_val / mean_val if mean_val != 0 else 0
-        
+
+        # Kiểm định Chi-square mức độ phù hợp với phân phối Poisson
+        p_val = poisson_goodness_of_fit(counts)
+
         stats_list.append({
             'factory_id': factory,
             'lambda_est': round(mean_val, 3),
             'variance': round(var_val, 3),
             'dispersion_index': round(iod, 3),
+            'p_value_chi2': round(p_val, 4) if pd.notna(p_val) else None,
             'max_orders_hr': counts.max(),
             'total_sample_hours': len(counts)
         })
