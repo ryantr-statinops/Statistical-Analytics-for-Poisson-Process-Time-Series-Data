@@ -31,11 +31,11 @@ Các phương pháp phân tích trong dự án sử dụng gồm:
   - `dispersion_index = variance / mean`
   - Nếu gần **1** ⇒ phù hợp với giả định **Poisson**; nếu khác nhiều ⇒ có thể **overdispersion**.
 * **Kiểm định phù hợp phân phối Poisson (Poisson goodness-of-fit):**
-  - Dùng **Chi-square** để so sánh tần suất quan sát với tần suất kỳ vọng theo **Poisson**.
+  - Dùng **Chi-square** với `ddof=1` (ước lượng tham số $\lambda$) và gom cụm bin nhỏ (bin pooling) để so sánh tần suất quan sát với tần suất kỳ vọng.
+  - `p_value_chi2 > 0.05`: Chưa có bằng chứng bác bỏ giả định Poisson (dữ liệu tuân theo Poisson).
 * **Trực quan hóa:**
-  - **Rolling mean (trung bình trượt 24h)** để quan sát xu hướng.
-  - **Histogram so sánh phân phối** cho từng nhà máy.
-
+  - **Rolling mean (trung bình trượt 24h)** để quan sát xu hướng dòng đơn theo thời gian.
+  - **Histogram so sánh phân phối** cho từng nhà máy, kết hợp vẽ đè hàm khối xác suất lý thuyết (**Poisson PMF stem plot**) để đối chiếu trực quan.
 
 ### C. Vận hành & Kỹ thuật
 
@@ -79,32 +79,43 @@ Dự án chia cấu trúc thư mục phân biệt theo từng chức năng để
 ```plaintext
 project_stochastic/
 |
-├── data/              #chứa dữ liệu thô và dữ liệu sau tính toán
-|   |
-│   ├── raw/           # Chứa 3 file CSV dữ liệu gốc của các nhà máy
-│   └── processed/     # Chứa file Master sau khi tính toán và tổng hợp
+├── data/              # Chứa dữ liệu thô và dữ liệu sau tính toán
+|   ├── raw/           # Chứa 3 file CSV dữ liệu gốc của các nhà máy
+|   └── processed/     # Chứa file báo cáo sau tính toán và tổng hợp (final_report.md)
 |   
-├── src/               # Chứa và phân loại các Module tính toán khác nhau
-|   |
-│   ├── data_loader.py # Module quét và đọc file tự động
-│   ├── stats_engine.py# Module tính toán các chỉ số thống kê (Poisson, Mean, Std)
-│   └── visualizer.py  # Module vẽ biểu đồ phân tích
+├── src/               # Chứa các Module tính toán chuyên biệt
+|   ├── data_loader.py # Module đọc file và zero-fill chuỗi thời gian theo giờ
+|   ├── stats_engine.py# Module tính chỉ số thống kê & kiểm định Chi-square Poisson
+|   └── visualizer.py  # Module vẽ đồ thị xu hướng và so sánh phân phối thực tế vs lý thuyết
 |
-├── main.py            # Script thực thi chính (điều chỉnh tham số của kết quả tại đây)
+├── tests/             # Bộ kiểm thử đơn vị & kiểm định thống kê
+|   └── test_stats_pipeline.py
 |
-├── data_gen.py        # Script khởi tạo dữ liệu giả lập ban đầu(điều chỉnh tham số của dữ liệu tại đây)
-|
-└── requirements.txt   # Danh sách thư viện (pandas, numpy, matplotlib, scipy)
-
+├── main.py            # Script thực thi chính điều phối toàn bộ pipeline
+├── data_gen.py        # Script khởi tạo dữ liệu giả lập Poisson ban đầu
+└── requirements.txt   # Danh sách thư viện phụ thuộc
 ```
 
 ---
 
-## 4. hướng dẫn triển khai (Step-by-Step)
+## 4. Hướng dẫn triển khai (Step-by-Step)
 
-1. **Bước 1:** Kích hoạt môi trường ảo tại terminal `.venv\Scripts\Activate.ps1`
-2. **Bước 2:** Chạy `data_gen.py` để tạo dữ liệu giả lập Poisson cho giai đoạn 2016 - 2018.
-3. **Bước 3:** chạy `main.py` để chạy toàn bộ dự án hoặc tinh chỉnh các thông số tại dự án
-4. **Bước 4:** Xem kết quả đã được trực quan hóa và các kiểm định thống kê để so sánh hiệu suất nhà máy tại `final_report.md`.
+1. **Bước 1:** Kích hoạt môi trường ảo tại terminal:
+   ```bash
+   .venv\Scripts\Activate.ps1
+   ```
+2. **Bước 2:** Chạy `data_gen.py` để tạo dữ liệu giả lập Poisson cho giai đoạn 2016 - 2018:
+   ```bash
+   python data_gen.py
+   ```
+3. **Bước 3:** (Tùy chọn) Chạy kiểm thử tự động để xác nhận tính toàn vẹn của pipeline:
+   ```bash
+   python -m unittest discover tests
+   ```
+4. **Bước 4:** Chạy `main.py` để thực thi toàn bộ luồng phân tích và hiển thị trực quan hóa:
+   ```bash
+   python main.py
+   ```
+5. **Bước 5:** Xem kết quả phân tích thống kê và kiểm định Poisson chi tiết tại `data/processed/final_report.md`.
 
 ---
