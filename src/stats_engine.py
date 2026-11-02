@@ -31,22 +31,62 @@ def calculate_basic_stats(hourly_df):
     
     return pd.DataFrame(stats_list)
 
-def poisson_goodness_of_fit(group_data):
+def poisson_goodness_of_fit(group_data, min_expected=5):
     """
     Kiểm định xem dữ liệu có thực sự tuân theo phân phối Poisson không.
-    Sử dụng kiểm định Chi-square.
+    Sử dụng kiểm định Chi-square với ddof=1 (do lambda ước lượng từ dữ liệu)
+    và gom nhóm (bin pooling) các tần suất kỳ vọng nhỏ hơn min_expected.
     """
-    obs_counts = group_data.value_counts().sort_index()
-    mu = group_data.mean()
-    
-    # Tính tần suất kỳ vọng dựa trên công thức Poisson
-    expected_probs = [stats.poisson.pmf(i, mu) for i in obs_counts.index]
-    expected_counts = np.array(expected_probs) * len(group_data)
-    
-    # Chạy kiểm định Chi-square
-    chi2, p_val = stats.chisquare(f_obs=obs_counts, f_exp=expected_counts)
-    
-    return p_val
+    if len(group_data) == 0:
+        return np.nan
+    mu = float(group_data.mean())
+    if mu <= 0:
+        return np.nan
+
+    n = len(group_data)
+    max_k = int(group_data.max())
+    k_vals = np.arange(0, max(max_k + 1, int(mu + 4 * np.sqrt(mu)) + 1))
+
+    obs_series = group_data.value_counts()
+    f_obs_raw = np.array([obs_series.get(k, 0) for k in k_vals], dtype=float)
+    if group_data.max() > k_vals[-1]:
+        f_obs_raw[-1] += (group_data > k_vals[-1]).sum()
+
+    f_exp_raw = stats.poisson.pmf(k_vals, mu) * n
+    f_exp_raw[-1] = stats.poisson.sf(k_vals[-1] - 1, mu) * n
+    f_exp_raw = f_exp_raw * (n / f_exp_raw.sum())
+
+    f_obs_pooled = []
+    f_exp_pooled = []
+    cur_obs = 0.0
+    cur_exp = 0.0
+    for obs, exp in zip(f_obs_raw, f_exp_raw):
+        cur_obs += obs
+        cur_exp += exp
+        if cur_exp >= min_expected:
+            f_obs_pooled.append(cur_obs)
+            f_exp_pooled.append(cur_exp)
+            cur_obs = 0.0
+            cur_exp = 0.0
+
+    if cur_exp > 0:
+        if len(f_exp_pooled) > 0:
+            f_obs_pooled[-1] += cur_obs
+            f_exp_pooled[-1] += cur_exp
+        else:
+            f_obs_pooled.append(cur_obs)
+            f_exp_pooled.append(cur_exp)
+
+    f_obs = np.array(f_obs_pooled)
+    f_exp = np.array(f_exp_pooled)
+    f_exp = f_exp * (f_obs.sum() / f_exp.sum())
+
+    ddof = 1
+    if len(f_obs) <= ddof + 1:
+        return np.nan
+
+    chi2, p_val = stats.chisquare(f_obs=f_obs, f_exp=f_exp, ddof=ddof)
+    return float(p_val)
 
 def export_report(summary_df, file_name='data/processed/final_report.md'):
     """Tạo báo cáo dưới dạng file Markdown để lưu trữ"""
