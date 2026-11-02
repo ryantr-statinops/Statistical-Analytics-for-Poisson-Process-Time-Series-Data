@@ -32,5 +32,19 @@ def factory_data_loader(data_path='data/raw/*.csv', start_year = None, end_year 
     return master_df
 
 def get_hourly_counts(df):
-    hourly_df = df.groupby(['factory_id', pd.Grouper(key='timestamp', freq='h')]).size().reset_index(name='order_count')
-    return hourly_df
+    if df.empty:
+        return pd.DataFrame(columns=['factory_id', 'timestamp', 'order_count'])
+
+    min_time = df['timestamp'].min().floor('h')
+    max_time = df['timestamp'].max().floor('h')
+    full_range = pd.date_range(start=min_time, end=max_time, freq='h')
+
+    results = []
+    for factory_id, group in df.groupby('factory_id'):
+        counts = group.groupby(pd.Grouper(key='timestamp', freq='h')).size()
+        counts = counts.reindex(full_range, fill_value=0).reset_index()
+        counts.columns = ['timestamp', 'order_count']
+        counts['factory_id'] = factory_id
+        results.append(counts[['factory_id', 'timestamp', 'order_count']])
+
+    return pd.concat(results, ignore_index=True)
