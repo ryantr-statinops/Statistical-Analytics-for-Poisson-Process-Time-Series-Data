@@ -34,8 +34,17 @@ def plot_distribution_comparison(hourly_df, factory_name, ax=None):
 
     # Vẽ Poisson lý thuyết vào ô ax
     x = np.arange(0, int(subset.max()) + 1)
-    ax.stem(x, poisson.pmf(x, mu), linefmt='red', markerfmt='ro', basefmt=" ", label=f'Poisson lý thuyết (λ={mu:.2f})')
+    markerline, stemlines, baseline = ax.stem(
+        x, poisson.pmf(x, mu),
+        linefmt='tab:red',
+        markerfmt='r.',
+        basefmt=" ",
+        label=f'Poisson lý thuyết (λ={mu:.2f})'
+    )
+    plt.setp(markerline, markersize=5)
+    plt.setp(stemlines, linewidth=1.2, alpha=0.8)
 
-    ax.set_title(f'Phân phối {factory_name}')
+    ax.set_title(f'Phân phối {factory_name}', fontsize=12, fontweight='bold')
     ax.set_xlabel('Số đơn hàng / Giờ')
-    ax.legend()
+    ax.grid(True, alpha=0.3)
+    ax.legend(loc='upper right', frameon=True)
